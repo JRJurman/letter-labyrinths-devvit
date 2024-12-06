@@ -1,0 +1,205 @@
+<style>
+	label {
+		display: block;
+	}
+
+	table {
+		border-collapse: collapse;
+	}
+
+	td {
+    border: solid 1px;
+	}
+
+	#previewTable td {
+		width: 20px;
+    height: 22px;
+    padding: 0;
+	}
+
+	td#player {
+		background: lightblue;
+	}
+
+	td#enemy {
+		background: lightcoral;
+	}
+
+	td.path {
+		background: lightcyan;
+	}
+
+	td.end {
+		background: lightskyblue;
+	}
+
+	#letterPools td {
+		padding: 0.5em;
+	}
+</style>
+
+<script src="./puzzle-generator.js"></script>
+
+<script type="module">
+	const friendlyWordsResponse = await fetch('https://unpkg.com/friendly-words@1.3.1/generated/words.json');
+	const friendlyWords = await friendlyWordsResponse.json();
+	window.allWords = Object.values(friendlyWords).flatMap((values) => values);
+</script>
+
+<body>
+	<label>
+		Seed
+		<input id="seedInput" type="range" min="0" max="365">
+	</label>
+
+	<table id="letterPools">
+		<tbody>
+			<thead>
+				<th>up</th>
+				<th>down</th>
+				<th>left</th>
+				<th>right</th>
+			</thead>
+			<tr>
+				<td id="up"></td>
+				<td id="down"></td>
+				<td id="left"></td>
+				<td id="right"></td>
+			</tr>
+		</tbody>
+	</table>
+
+	<table id="previewTable" cellpadding="0" cellspacing="0">
+		<tbody>
+			<tr>
+				<td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+			</tr>
+			<tr>
+				<td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+			</tr>
+			<tr>
+				<td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+			</tr>
+			<tr>
+				<td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+			</tr>
+			<tr>
+				<td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+			</tr>
+			<tr>
+				<td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+			</tr>
+			<tr>
+				<td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+			</tr>
+		</tbody>
+	</table>
+
+	<label>
+		Input
+		<input id="wordInput" type="text">
+	</label>
+
+	<label>
+		Score
+		<input id="wordScore" type="text" disabled>
+	</label>
+
+	<button id="generator">Generator</button>
+</body>
+
+<script>
+	// dedicated functions for interacting with the preview table
+	const colorCell = (cellCoord, className) => {
+		const tbody = previewTable.children[0]
+		const coordRow = tbody.children[cellCoord[1]]
+		const coordCell = coordRow.children[cellCoord[0]]
+		coordCell.classList.add(className)
+	}
+
+	const clearColors = (className) => {
+		[...document.querySelectorAll(`td.${className}`)].forEach(
+			(cell) => cell.classList.remove(className)
+		)
+	}
+</script>
+
+<script>
+	// event listeners for working with seed
+	const onIndexChange = (event) => {
+		// clear old coord values
+		player.id = ''
+		enemy.id = ''
+
+		// clear all previously colored paths
+		clearColors('path');
+		clearColors('end');
+
+		// set new coord values
+		setNewCoords(parseInt(event.target.value));
+		setLetterPools(parseInt(event.target.value));
+	}
+
+	// function for getting (and updating ids for) player and enemy coords
+	const setNewCoords = (index) => {
+		const tbody = previewTable.children[0]
+
+		const playerCoord = getPlayerCoord(index);
+		const enemyCoord = getEnemyCoord(index);
+
+		const playerRow = tbody.children[playerCoord[1]]
+		const playerCell = playerRow.children[playerCoord[0]]
+		playerCell.id = 'player'
+
+		const enemyRow = tbody.children[enemyCoord[1]]
+		const enemyCell = enemyRow.children[enemyCoord[0]]
+		enemyCell.id = 'enemy'
+	}
+
+	// function for building and updating letter pools
+	const setLetterPools = (index) => {
+		const letterPools = getLetterPools(index);
+		up.textContent = letterPools[0].join(' ');
+		down.textContent = letterPools[1].join(' ');
+		left.textContent = letterPools[2].join(' ');
+		right.textContent = letterPools[3].join(' ');
+	}
+
+	// set initial values with default seed input
+	setNewCoords(parseInt(seedInput.value));
+	setLetterPools(parseInt(seedInput.value));
+
+	// add event listener
+	seedInput.addEventListener('input', onIndexChange);
+</script>
+
+<script>
+	// event listeners for testing inputs
+	const onEnteringWord = (event) => {
+		const words = event.target.value;
+		const index = parseInt(seedInput.value);
+
+		const pc = getPlayerCoord(index);
+		const nextCoords = getNewCoordsWithWords(index, pc, words)
+
+		// clear all previously colored paths
+		clearColors('path');
+		clearColors('end');
+
+		nextCoords.forEach((coord) => {
+			colorCell(coord, 'path');
+		});
+		if (nextCoords.length) {
+			colorCell(nextCoords.at(-1), 'end');
+		}
+	}
+	wordInput.addEventListener('input', onEnteringWord)
+</script>
+
+<script>
+	// event listener to trigger generator
+	generator.addEventListener('click', () => {
+		const index = parseInt(seedInput.value);
+		generateWords(allWords, index)
+	})
+</script>

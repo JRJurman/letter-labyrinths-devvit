@@ -1,0 +1,18 @@
+{
+  "private": true,
+  "name": "letter-labyrinth",
+  "version": "0.0.0",
+  "license": "BSD-3-Clause",
+  "type": "module",
+  "scripts": {
+    "upload": "devvit upload",
+    "playtest": "devvit playtest LetterLabyrinthDevvit"
+  },
+  "dependencies": {
+    "@devvit/public-api": "0.11.3"
+  },
+  "devDependencies": {
+    "devvit": "^0.11.3",
+    "typescript": "5.3.2"
+  }
+}
