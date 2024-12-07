@@ -49,7 +49,7 @@ Devvit.addCustomPostType({
       <vstack border="thick" borderColor="black" height="100%">
         <webview
           id="myWebView"
-          url="page.html"
+          url="preview.html"
           onMessage={(msg) => onMessage(msg)}
           grow
           height="100%"
